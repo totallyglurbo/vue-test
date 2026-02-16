@@ -21,16 +21,19 @@ initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0">
             <h1>{{ product }}</h1>
             <p>{{ description }}</p>
             <span v-if="onSale">On Sale</span>
-            <p v-if="inventory > 10">In Stock</p>
-            <p v-else-if="inventory <= 10 && inventory > 0">Almost sold out!</p>
-            <p v-else>Out of Stock</p>
+            <p v-if="inventory > 10 && inStock">In Stock</p>
+            <p v-else-if="inventory <= 10 && inventory > 0 && inStock">Almost sold out!</p>
+            <p v-else :class="{ outOfStock: !inStock || inventory <= 0 }">Out of Stock</p>
             <ul>
                 <li v-for="detail in details">{{ detail }}</li>
             </ul>
-            <div v-for="variant in variants" :key="variant.variantId">
-                <p @mouseover="updateProduct(variant.variantImage)">
-                    {{ variant.variantColor }}
-                </p>
+            <div
+                    class="color-box"
+                    v-for="variant in variants"
+                    :key="variant.variantId"
+                    :style="{ backgroundColor:variant.variantColor }"
+                    @mouseover="updateProduct(variant.variantImage)"
+            >
             </div>
             <ul>
                 <li v-for="size in sizes">{{ size }}</li>
@@ -41,7 +44,12 @@ initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0">
             <div class="cart">
                 <p>Cart({{ cart }})</p>
             </div>
-            <button v-on:click="addToCart">Add to cart</button>
+            <button
+                    v-on:click="addToCart"
+                    :disabled="!inStock"
+                    :class="{ disabledButton: !inStock || inventory <= 0}"
+            >
+                Add to cart</button>
             <button v-if="cart > 0" v-on:click="deleteFromCart">Delete from cart</button>
         </div>
     </div>
