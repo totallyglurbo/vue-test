@@ -17,7 +17,7 @@ Vue.component('product', {
             <span>{{ sale }}</span>
             <p v-if="variants[selectedVariant].variantQuantity > 10 && inStock">In Stock</p>
             <p v-else-if="variants[selectedVariant].variantQuantity <= 10 && variants[selectedVariant].variantQuantity > 0 && inStock">Almost sold out!</p>
-            <p v-else :class="{ outOfStock: !inStock || variants[selectedVariant].variantQuantity <= 0 }">Out of Stock</p>
+            <p v-else :class="{ outOfStock: !inStock || variants[selectedVariant].variantQuantity <= 0}">Out of Stock</p>
             <product-details></product-details>
             <div
                     class="color-box"
@@ -27,6 +27,9 @@ Vue.component('product', {
                     @mouseover="updateProduct(index)"
             >
             </div>
+            <ul>
+                <li v-for="(varian"></li>
+            </ul>
             <ul>
                 <li v-for="size in sizes">{{ size }}</li>
             </ul>
@@ -57,13 +60,57 @@ Vue.component('product', {
                     variantId: 2234,
                     variantColor: 'green',
                     variantImage: './assets/vmSocks-green-onWhite.jpg',
-                    variantQuantity: 10
+                    variantQuantity: 10,
+                    variantSizes: [
+                        {
+                            sizeId: 1134,
+                            sizeMeasure: 'S',
+                            sizeQuantity: 2
+                        },
+                        {
+                            sizeId: 1135,
+                            sizeMeasure: 'M',
+                            sizeQuantity: 1
+                        },
+                        {
+                            sizeId: 1136,
+                            sizeMeasure: 'L',
+                            sizeQuantity: 7
+                        },
+                        {
+                            sizeId: 1137,
+                            sizeMeasure: 'XL',
+                            sizeQuantity: 0
+                        }
+                    ]
                 },
                 {
                     variantId: 2235,
                     variantColor: 'blue',
                     variantImage: './assets/vmSocks-blue-onWhite.jpg',
-                    variantQuantity: 0
+                    variantQuantity: 0,
+                    variantSizes: [
+                        {
+                            sizeId: 1138,
+                            sizeMeasure: 'S',
+                            sizeQuantity: 1
+                        },
+                        {
+                            sizeId: 1139,
+                            sizeMeasure: 'M',
+                            sizeQuantity: 0
+                        },
+                        {
+                            sizeId: 1140,
+                            sizeMeasure: 'L',
+                            sizeQuantity: 3
+                        },
+                        {
+                            sizeId: 1141,
+                            sizeMeasure: 'XL',
+                            sizeQuantity: 6
+                        }
+                    ]
                 }
             ],
             sizes: ['S', 'M', 'L', 'XL', 'XXL', 'XXXL'],
@@ -138,6 +185,10 @@ Vue.component('product-tabs', {
         details: {
             type: Array,
             required: true
+        },
+        positiveCount: {
+            type: Number,
+            required: false
         }
     },
     template: `
@@ -149,6 +200,7 @@ Vue.component('product-tabs', {
              @click="selectedTab = tab"
              >{{ tab }}</span>
         </ul>
+        <p>{{positiveCount}}</p>
         <div v-show="selectedTab === 'Reviews'">
             <p v-if="!reviews.length">There are no reviews yet.</p>
             <ul>
@@ -156,6 +208,7 @@ Vue.component('product-tabs', {
                 <p>{{review.name}}</p>
                 <p>Rating: {{ review.rating }}</p>
                 <p>{{ review.review }}</p>
+                <p>Would recommend: {{review.recommend}}</p>
                 </li>
             </ul>
         </div>
@@ -184,7 +237,7 @@ Vue.component('product-tabs', {
             else {
                 return 2.99;
             }
-        }
+        },
     }
 })
 Vue.component('product-review',{
@@ -254,6 +307,14 @@ Vue.component('product-review',{
                 if(!this.recommend) this.errors.push("Recommendation required.")
             }
         },
+    },
+    computed: {
+        positiveCount() {
+            let count = 0;
+            if(this.recommend === "Yes") {
+                return count++;
+            }
+        }
     }
 })
 let app = new Vue({
