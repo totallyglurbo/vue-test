@@ -11,14 +11,13 @@ Vue.component('product', {
     <div class="product-image">
             <img alt="#" :src="image" :alt="altText"/>
         </div>
-        <div class="product-info>">
+        <div class="product-info">
             <h1>{{ title }}</h1>
             <p>{{ description }}</p>
             <span>{{ sale }}</span>
             <p v-if="variants[selectedVariant].variantQuantity > 10 && inStock">In Stock</p>
             <p v-else-if="variants[selectedVariant].variantQuantity <= 10 && variants[selectedVariant].variantQuantity > 0 && inStock">Almost sold out!</p>
-            <p v-else :class="{ outOfStock: !inStock || variants[selectedVariant].variantQuantity <= 0}">Out of Stock</p>
-            <product-details></product-details>
+            <p v-else :class="{ outOfStock: !inStock || variants[selectedVariant].variantQuantity <= 0 }">Out of Stock</p>
             <div
                     class="color-box"
                     v-for="(variant, index) in variants"
@@ -28,22 +27,28 @@ Vue.component('product', {
             >
             </div>
             <ul>
-                <li v-for="(varian"></li>
+                <li v-for="(size, index) in variants[selectedVariant].variantSizes"
+                :key="size.sizeId"
+                :class="{ activeSize: selectedSizeVariant === index, outOfStock: size.sizeQuantity === 0 }"
+                @click="updateSize(index)"
+                >
+                {{ size.sizeMeasure }} (Available: {{ size.sizeQuantity }})</li>
             </ul>
-            <ul>
-                <li v-for="size in sizes">{{ size }}</li>
-            </ul>
+            <p v-if="variants.length && variants[selectedVariant].variantSizes.length">
+                Your chosen size: {{ variants[selectedVariant].variantSizes[selectedSizeVariant].sizeMeasure }}
+            </p>
+            <p>Price: {{ price }}</p>
             <p>
                 <a :href="link">More products like this</a>
             </p>
             <button
                     v-on:click="addToCart"
                     :disabled="!inStock"
-                    :class="{ disabledButton: !inStock || variants[selectedVariant].variantQuantity <= 0}"
+                    :class="{ disabledButton: !inStock || variants[selectedVariant].variantQuantity <= 0 || variants[selectedVariant].variantSizes[selectedSizeVariant].sizeQuantity <= 0}"
             >
                 Add to cart</button>
             <button v-on:click="deleteFromCart">Delete from cart</button>
-        <product-tabs :reviews="reviews"></product-tabs>
+        <product-tabs :reviews="reviews" :positiveCount="positiveCount" :shipping="shipping"></product-tabs>
     </div>
     `,
     data() {
@@ -52,15 +57,17 @@ Vue.component('product', {
             brand: "Vue Mastery",
             description: "A pair of warm, fuzzy socks.",
             selectedVariant: 0,
+            selectedSizeVariant: 0,
             altText: "A pair of socks",
             link: "https://www.amazon.com/s/ref=nb_sb_noss?url=search-alias%3Daps&field-keywords=socks",
             onSale: true,
+            price: "$4.99",
             variants: [
                 {
                     variantId: 2234,
                     variantColor: 'green',
                     variantImage: './assets/vmSocks-green-onWhite.jpg',
-                    variantQuantity: 10,
+                    variantQuantity: 15,
                     variantSizes: [
                         {
                             sizeId: 1134,
@@ -70,7 +77,7 @@ Vue.component('product', {
                         {
                             sizeId: 1135,
                             sizeMeasure: 'M',
-                            sizeQuantity: 1
+                            sizeQuantity: 6
                         },
                         {
                             sizeId: 1136,
@@ -88,7 +95,7 @@ Vue.component('product', {
                     variantId: 2235,
                     variantColor: 'blue',
                     variantImage: './assets/vmSocks-blue-onWhite.jpg',
-                    variantQuantity: 0,
+                    variantQuantity: 10,
                     variantSizes: [
                         {
                             sizeId: 1138,
@@ -113,22 +120,29 @@ Vue.component('product', {
                     ]
                 }
             ],
-            sizes: ['S', 'M', 'L', 'XL', 'XXL', 'XXXL'],
             reviews: []
         }
     },
     methods: {
         addToCart() {
-            this.$emit('add-to-cart',
-            this.variants[this.selectedVariant].variantId);
+            this.$emit('add-to-cart', {
+            variantId: this.variants[this.selectedVariant].variantId,
+            sizeId: this.variants[this.selectedVariant].variantSizes[this.selectedSizeVariant].sizeId
+            });
         },
         deleteFromCart() {
-            this.$emit('delete-from-cart',
-            this.variants[this.selectedVariant].variantId);
+            this.$emit('delete-from-cart', {
+            variantId: this.variants[this.selectedVariant].variantId,
+            sizeId: this.variants[this.selectedVariant].variantSizes[this.selectedSizeVariant].sizeId
+            });
         },
         updateProduct(index) {
             this.selectedVariant = index;
+            this.selectedSizeVariant = 0;
             console.log(index);
+        },
+        updateSize(index) {
+            this.selectedSizeVariant = index;
         },
         addReview(productReview) {
             this.reviews.push(productReview)
@@ -150,6 +164,23 @@ Vue.component('product', {
             }
             else {
                 return this.brand + ' ' + this.product + ' are not on sale.';
+            }
+        },
+        positiveCount() {
+        let count = 0;
+        for (let i = 0; i < this.reviews.length; i++) {
+            if (this.reviews[i].recommend === "Yes") {
+            count++;
+            }
+        }
+        return count;
+        },
+        shipping() {
+            if (this.premium) {
+                return "Free";
+            }
+            else {
+                return 2.99;
             }
         },
     },
@@ -200,9 +231,9 @@ Vue.component('product-tabs', {
              @click="selectedTab = tab"
              >{{ tab }}</span>
         </ul>
-        <p>{{positiveCount}}</p>
         <div v-show="selectedTab === 'Reviews'">
             <p v-if="!reviews.length">There are no reviews yet.</p>
+            <p>Positive recommendations: {{ positiveCount }}</p>
             <ul>
                 <li v-for="review in reviews">
                 <p>{{review.name}}</p>
@@ -229,16 +260,6 @@ Vue.component('product-tabs', {
             selectedTab: 'Reviews'
         }
     },
-    computed: {
-        shipping() {
-            if (this.premium) {
-                return "Free";
-            }
-            else {
-                return 2.99;
-            }
-        },
-    }
 })
 Vue.component('product-review',{
     template: `
@@ -308,30 +329,20 @@ Vue.component('product-review',{
             }
         },
     },
-    computed: {
-        positiveCount() {
-            let count = 0;
-            if(this.recommend === "Yes") {
-                return count++;
-            }
-        }
-    }
 })
 let app = new Vue({
     el: '#app',
     data: {
-        premium: false,
+        premium: true,
         cart: []
     },
     methods: {
-        updateCart(id) {
-            this.cart.push(id)
-        },
-        deleteProduct(id) {
-            const index = this.cart.indexOf(id);
-            if (index > -1) {
-                this.cart.splice(index, 1);
-            }
-        }
+        updateCart(item) {
+      this.cart.push(item);
+    },
+    deleteProduct(item) {
+      const index = this.cart.findIndex(i => i.variantId === item.variantId && i.sizeId === item.sizeId);
+      if(index > -1) this.cart.splice(index, 1);
     }
+   }
 })
