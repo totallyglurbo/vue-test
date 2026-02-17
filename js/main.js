@@ -45,16 +45,13 @@ Vue.component('product', {
             <p>
                 <a :href="link">More products like this</a>
             </p>
-            <div class="cart">
-                <p>Cart({{ cart }})</p>
-            </div>
             <button
                     v-on:click="addToCart"
                     :disabled="!inStock"
                     :class="{ disabledButton: !inStock || variants[selectedVariant].variantQuantity <= 0}"
             >
                 Add to cart</button>
-            <button v-if="cart > 0" v-on:click="deleteFromCart">Delete from cart</button>
+            <button v-on:click="deleteFromCart">Delete from cart</button>
         </div>
     </div>
     `,
@@ -82,15 +79,16 @@ Vue.component('product', {
                 }
             ],
             sizes: ['S', 'M', 'L', 'XL', 'XXL', 'XXXL'],
-            cart: 0,
         }
     },
     methods: {
         addToCart() {
-            this.cart += 1;
+            this.$emit('add-to-cart',
+            this.variants[this.selectedVariant].variantId);
         },
         deleteFromCart() {
-            this.cart -= 1;
+            this.$emit('delete-from-cart',
+            this.variants[this.selectedVariant].variantId);
         },
         updateProduct(index) {
             this.selectedVariant = index;
@@ -128,6 +126,18 @@ Vue.component('product', {
 let app = new Vue({
     el: '#app',
     data: {
-        premium: true
+        premium: true,
+        cart: []
+    },
+    methods: {
+        updateCart(id) {
+            this.cart.push(id)
+        },
+        deleteProduct(id) {
+            const index = this.cart.indexOf(id);
+            if (index > -1) {
+               this.cart.splice(index, 1);
+            }
+        }
     }
 })
