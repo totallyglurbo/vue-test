@@ -168,12 +168,16 @@ Vue.component('product', {
         },
         positiveCount() {
         let count = 0;
+        let total = 0;
+        let percentage = 0;
         for (let i = 0; i < this.reviews.length; i++) {
-            if (this.reviews[i].recommend === "Yes") {
+            total++;
+            if (this.reviews[i].rating === 4 || this.reviews[i].rating === 5) {
             count++;
             }
+            percentage = (count / total) * 100;
         }
-        return count;
+        return {count: count, percentage: percentage, total: total};
         },
         shipping() {
             if (this.premium) {
@@ -233,7 +237,7 @@ Vue.component('product-tabs', {
         </ul>
         <div v-show="selectedTab === 'Reviews'">
             <p v-if="!reviews.length">There are no reviews yet.</p>
-            <p>Positive recommendations: {{ positiveCount }}</p>
+            <p>Positive reviews: {{ positiveCount.count }}, ({{positiveCount.percentage}}%)</p>
             <ul>
                 <li v-for="review in reviews">
                 <p>{{review.name}}</p>
